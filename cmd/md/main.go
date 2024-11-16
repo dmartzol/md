@@ -10,7 +10,11 @@ import (
 
 func main() {
 	// Check if input is being piped
-	stat, _ := os.Stdin.Stat()
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: unable to stat stdin: %v\n", err)
+		os.Exit(1)
+	}
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
 		fmt.Fprintln(os.Stderr, "error: no input provided")
 		fmt.Fprintln(os.Stderr, "usage: cat input.csv | md-convert")
@@ -78,29 +82,29 @@ func convertCSVToMarkdown(in [][]string) (string, error) {
 		}
 	}
 
-	var result string
+	var builder strings.Builder
 
 	// Add header row
-	result += "|"
+	builder.WriteString("|")
 	for i, header := range in[0] {
-		result += " " + header + strings.Repeat(" ", colWidths[i]-len(header)) + " |"
+		builder.WriteString(" " + header + strings.Repeat(" ", colWidths[i]-len(header)) + " |")
 	}
-	result += "\n|"
+	builder.WriteString("\n|")
 
 	// Add separator row
 	for _, width := range colWidths {
-		result += " " + strings.Repeat("-", width) + " |"
+		builder.WriteString(" " + strings.Repeat("-", width) + " |")
 	}
-	result += "\n"
+	builder.WriteString("\n")
 
 	// Add data rows
 	for _, row := range in[1:] {
-		result += "|"
+		builder.WriteString("|")
 		for i, cell := range row {
-			result += " " + cell + strings.Repeat(" ", colWidths[i]-len(cell)) + " |"
+			builder.WriteString(" " + cell + strings.Repeat(" ", colWidths[i]-len(cell)) + " |")
 		}
-		result += "\n"
+		builder.WriteString("\n")
 	}
 
-	return result, nil
+	return builder.String(), nil
 }

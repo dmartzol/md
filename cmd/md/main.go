@@ -62,32 +62,42 @@ func main() {
 	fmt.Print(out)
 }
 
-// convertCSVToMarkdown converts a CSV string to a markdown table.
+// convertCSVToMarkdown converts a CSV string to a markdown table with aligned columns.
 func convertCSVToMarkdown(in [][]string) (string, error) {
 	if len(in) < 1 {
 		return "", fmt.Errorf("input slice is empty")
+	}
+
+	// Calculate the maximum width for each column
+	colWidths := make([]int, len(in[0]))
+	for _, row := range in {
+		for i, cell := range row {
+			if len(cell) > colWidths[i] {
+				colWidths[i] = len(cell)
+			}
+		}
 	}
 
 	var result string
 
 	// Add header row
 	result += "|"
-	for _, header := range in[0] {
-		result += " " + header + " |"
+	for i, header := range in[0] {
+		result += " " + header + strings.Repeat(" ", colWidths[i]-len(header)) + " |"
 	}
 	result += "\n|"
 
 	// Add separator row
-	for range in[0] {
-		result += " --- |"
+	for _, width := range colWidths {
+		result += " " + strings.Repeat("-", width) + " |"
 	}
 	result += "\n"
 
 	// Add data rows
 	for _, row := range in[1:] {
 		result += "|"
-		for _, cell := range row {
-			result += " " + cell + " |"
+		for i, cell := range row {
+			result += " " + cell + strings.Repeat(" ", colWidths[i]-len(cell)) + " |"
 		}
 		result += "\n"
 	}
